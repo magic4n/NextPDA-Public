@@ -1,6 +1,8 @@
 import { NewsArticle, ForumSection, ForumTopic, ForumPost } from '../types';
 import { getCacheItem, setCacheItem } from './cache';
 import { getApiBaseUrl } from './platform';
+import { getActiveCapToken } from './captcha';
+import { useUIStore } from '../store/useUIStore';
 
 const CACHE_TTL_5_MIN = 5 * 60 * 1000;
 
@@ -21,12 +23,21 @@ export async function fetchNewsFeed(category = 'all', page = 1): Promise<{
 
   // Try fetching live 4PDA news from proxy endpoint
   try {
-    const res = await fetch(`${getApiBaseUrl()}/news/feed`);
+    const headers: Record<string, string> = {};
+    const capToken = getActiveCapToken();
+    if (capToken) headers['X-Cap-Token'] = capToken;
+
+    const res = await fetch(`${getApiBaseUrl()}/news/feed`, { headers });
     if (res.ok) {
       const liveData = await res.json();
       if (liveData && liveData.hero && Array.isArray(liveData.articles)) {
         await setCacheItem(cacheKey, liveData, CACHE_TTL_5_MIN);
         return liveData;
+      }
+    } else if (res.status === 429) {
+      const errJson = await res.json().catch(() => ({}));
+      if (errJson.captcha_required) {
+        useUIStore.getState().openCaptchaModal(errJson.challenge);
       }
     }
   } catch (err) {
@@ -574,11 +585,20 @@ export async function searchForum(
       scope,
       sort,
     });
-    const res = await fetch(`${getApiBaseUrl()}/search?${params.toString()}`);
+    const headers: Record<string, string> = {};
+    const capToken = getActiveCapToken();
+    if (capToken) headers['X-Cap-Token'] = capToken;
+
+    const res = await fetch(`${getApiBaseUrl()}/search?${params.toString()}`, { headers });
     if (res.ok) {
       const data: SearchResponse = await res.json();
       await setCacheItem(cacheKey, data, CACHE_TTL_5_MIN);
       return data;
+    } else if (res.status === 429) {
+      const errJson = await res.json().catch(() => ({}));
+      if (errJson.captcha_required) {
+        useUIStore.getState().openCaptchaModal(errJson.challenge);
+      }
     }
   } catch (err) {
     console.warn('API search failed, falling back to local search engine:', err);

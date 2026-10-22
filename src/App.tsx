@@ -7,6 +7,7 @@ import { ToastContainer } from './components/common/Toast';
 import { DownloadBar } from './components/common/DownloadBar';
 import { AuthModal } from './components/common/AuthModal';
 import { SearchModal } from './components/common/SearchModal';
+import { CapCaptchaModal } from './components/common/CapCaptchaModal';
 import { HomePage } from './pages/HomePage';
 import { ForumPage } from './pages/ForumPage';
 import { ActivityPage } from './pages/ActivityPage';
@@ -61,6 +62,7 @@ export const App: React.FC = () => {
       <ToastContainer />
       <AuthModal />
       <SearchModal />
+      <CapCaptchaModal />
     </div>
   );
 };

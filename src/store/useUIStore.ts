@@ -48,6 +48,13 @@ interface UIState {
   // New topic modal
   isNewTopicModalOpen: boolean;
   setNewTopicModalOpen: (open: boolean) => void;
+
+  // CAP Captcha modal for frequent identical actions
+  isCaptchaModalOpen: boolean;
+  captchaChallenge: { challenge: string; difficulty: number } | null;
+  captchaOnSuccess: (() => void) | null;
+  openCaptchaModal: (challenge?: { challenge: string; difficulty: number }, onSuccess?: () => void) => void;
+  closeCaptchaModal: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -132,4 +139,20 @@ export const useUIStore = create<UIState>((set) => ({
 
   isNewTopicModalOpen: false,
   setNewTopicModalOpen: (open) => set({ isNewTopicModalOpen: open }),
+
+  isCaptchaModalOpen: false,
+  captchaChallenge: null,
+  captchaOnSuccess: null,
+  openCaptchaModal: (challenge, onSuccess) =>
+    set({
+      isCaptchaModalOpen: true,
+      captchaChallenge: challenge || null,
+      captchaOnSuccess: onSuccess || null,
+    }),
+  closeCaptchaModal: () =>
+    set({
+      isCaptchaModalOpen: false,
+      captchaChallenge: null,
+      captchaOnSuccess: null,
+    }),
 }));
